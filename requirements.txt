@@ -4,5 +4,6 @@ streamlit
 scikit-learn
 tensorflow
 langchain
+langchain-groq
 langchain-community
 python-dotenv
