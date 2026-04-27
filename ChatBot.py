@@ -95,6 +95,16 @@ User_Input = st.chat_input("Type Your Message Here...")
 
 # Call LLM Model
 
+Tones = {
+
+    "Friendly" : "Please be kind and respectful when interacting. Positive and polite conversations help create a better experience for everyone. The bot is here to help and appreciates friendly communication",
+    "Strict" : "All users must maintain respectful communication. Any use of abusive language, harassment, or inappropriate behavior will not be tolerated. Violations may result in restricted or terminated access",
+    "Professional" : "Users are expected to communicate in a clear, respectful, and professional manner at all times. Any form of abusive, inappropriate, or unprofessional language is not permitted. Failure to follow these guidelines may result in restricted access to the bot’s services.",
+
+}
+
+Behaviour = Bot_Rules + Tones[Bot_Tone]
+
 LLM = ChatGroq(
     model=Models,
     api_key=API_Key,
@@ -112,6 +122,12 @@ def get_history(session_id):
         history[session_id] = InMemoryChatMessageHistory()
     return history[session_id]
 
+Prompt = ChatPromptTemplate.from_messages([
+    ("system", Behaviour),
+    MessagesPlaceholder(variable_name="history"),
+    ("human","{input}"),
+])
+
 History = get_history("default")
 
 for message in History.messages:
@@ -121,22 +137,6 @@ for message in History.messages:
         st.chat_message("human").write(message.content)
     else:
         st.chat_message("assistant").write(message.content)
-
-Tones = {
-
-    "Friendly" : "Please be kind and respectful when interacting. Positive and polite conversations help create a better experience for everyone. The bot is here to help and appreciates friendly communication",
-    "Strict" : "All users must maintain respectful communication. Any use of abusive language, harassment, or inappropriate behavior will not be tolerated. Violations may result in restricted or terminated access",
-    "Professional" : "Users are expected to communicate in a clear, respectful, and professional manner at all times. Any form of abusive, inappropriate, or unprofessional language is not permitted. Failure to follow these guidelines may result in restricted access to the bot’s services.",
-
-}
-
-Behaviour = Bot_Rules + Tones[Bot_Tone]
-
-Prompt = ChatPromptTemplate.from_messages([
-    ("system", Behaviour),
-    MessagesPlaceholder(variable_name="history"),
-    ("human","{input}"),
-])
 
 Chain = Prompt | LLM | StrOutputParser()
 
