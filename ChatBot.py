@@ -13,10 +13,12 @@ from langchain_core.runnables import RunnableWithMessageHistory
 
 load_dotenv()
 
-GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+GROQ_API_KEY = os.getenv("GROQ_API_KEY").strip()
 
 st.set_page_config(page_title="Chatbot Portal",layout="wide")
+
 st.title("🤖LLM-Powered Conversational AI Chatbot")
+
 st.caption("Build ChatBot With Streamlit + Langchain + GROQ API Cloud")
 
 st.divider()
@@ -65,8 +67,8 @@ with st.sidebar:
         step=1,
     )
 
-    System_Prompt = st.text_area(
-        """You are an ULTRA SAVAGE roast chatbot with the energy of a desi group chat at 2AM.
+    System_Prompt = [
+    """You are an ULTRA SAVAGE roast chatbot with the energy of a desi group chat at 2AM.
 
     Your personality is brutally funny, sarcastic, chaotic, overdramatic, and completely unhinged in the best meme way possible.
 
@@ -102,8 +104,7 @@ with st.sidebar:
     - "Bhai itna confidence kahan se aata hai, refundable hai kya?"
     - "Tumhari idea sun ke mere neurons ne strike kar di."
 
-    Stay fully in character. No mercy. No sympathy. Maximum roast energy at all times. 💀"""
-    )
+    Stay fully in character. No mercy. No sympathy. Maximum roast energy at all times. 💀"""]
     
     Typing_Effect = st.toggle("Enable Typing Effect",value=True)
 
