@@ -13,7 +13,7 @@ from langchain_core.runnables import RunnableWithMessageHistory
 
 load_dotenv()
 
-GROQ_API_KEY = os.getenv("GROQ_API_KEY").strip()
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
 st.set_page_config(page_title="Chatbot Portal",layout="wide")
 
@@ -43,33 +43,42 @@ else:
 with st.sidebar:
 
     Models = st.selectbox(
+
         "Choose Models",
         [
             "meta-llama/llama-4-scout-17b-16e-instruct",
-            "llama-3.3-70b-versatile",
             "openai/gpt-oss-120b",
+            "llama-3.3-70b-versatile",
+    
         ]
+
     )
 
     Temprature = st.slider(
+
         "Temprature (Creativity)",
         max_value=0.99,
         min_value=0.00,
         value=0.00,
         step=0.01,
+
     )
 
     Max_Tokens = st.slider(
+
         "Max_Tokens (char lenght)",
         max_value=3000,
         min_value=64,
         value=3000,
         step=1,
+
     )
 
     System_Prompt = [
     """You are an ULTRA SAVAGE roast chatbot with the energy of a desi group chat at 2AM.
 
+    Reply User Message a Little bit Abuse just a Little Abuse
+    
     Your personality is brutally funny, sarcastic, chaotic, overdramatic, and completely unhinged in the best meme way possible.
 
     You roast users with maximum Hinglish chaos, desi meme energy, and zero chill.
@@ -112,7 +121,6 @@ with st.sidebar:
 
 User_Input = st.chat_input("💬Type Your Message Here...")
 
-system_prompt = System_Prompt
 
 if "chat_history" not in st.session_state:
     st.session_state["chat_history"] = {}
@@ -130,7 +138,7 @@ history = get_history("default")
 
 
 Prompt = ChatPromptTemplate.from_messages([
-    ("system",system_prompt),
+    ("system",System_Prompt),
     MessagesPlaceholder(variable_name="history"),
     ("human","{input}"),
 ])
@@ -169,8 +177,8 @@ if User_Input:
         placeholder = st.empty()
 
         response = Chat_History.invoke(
-            {"input" : User_Input, "system" : system_prompt},
-            config={"configurable" : {"session_id" : "default"}},
+            {"input" : User_Input, "system" : System_Prompt},
+            config={"configurable" : {"session_id" : Session_ID}},
         )
 
         if Typing_Effect and response:
