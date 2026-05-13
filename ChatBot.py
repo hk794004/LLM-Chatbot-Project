@@ -30,7 +30,7 @@ with st.sidebar:
         type="password"
     )
 
-    API_KEY = API_Input if API_Input else GROQ_API_KEY
+API_KEY = API_Input if API_Input else GROQ_API_KEY
 
 if not API_KEY:
     st.warning("⚠️ API Key Missing")
@@ -66,7 +66,6 @@ with st.sidebar:
     )
 
     System_Prompt = st.text_area(
-        "System Prompt",
         """You are an ULTRA SAVAGE roast chatbot with the energy of a desi group chat at 2AM.
 
     Your personality is brutally funny, sarcastic, chaotic, overdramatic, and completely unhinged in the best meme way possible.
@@ -111,14 +110,6 @@ with st.sidebar:
     Clear_Chat_Button = st.button("Clear Chat")
 
 User_Input = st.chat_input("💬Type Your Message Here...")
-
-Tones = {
-
-    "Friendly" : "You are a friendly AI assistant. Respond warmly politely  and supportively. Make the user feel comfortable while keeping your answers clear, helpful and easy to understand",
-    "Strict" : "You are a strict AI assistant. Give direct, concise, and rule-focused answers. Avoid unnecessary conversation, emotions, or extra explanations unless specifically requested.",
-    "Smart" : "You are a smart and friendly AI assistant. Be professional, intelligent, and polite. Keep answers concise but helpful, explain clearly when needed, and maintain a natural conversational style."
-
-}
 
 system_prompt = System_Prompt
 
