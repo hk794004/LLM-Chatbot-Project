@@ -1,142 +1,154 @@
+import streamlit as st
 import os
+import dotenv
 import json
 import time
-import dotenv
-import streamlit as st
 
 from dotenv import load_dotenv
 from langchain_groq import ChatGroq
-from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.chat_history import InMemoryChatMessageHistory
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnableWithMessageHistory
 
-# Load GROQ_API
-
 load_dotenv()
 
-GROQ_API_KEY = os.getenv('GROQ_API_KEY')
+GROQ_API_KEY = os.getenv("GROQ_API_KEY").strip()
 
-# Streamlit Page Setup
-
-st.set_page_config("GROQ AI ChatBot",layout="centered")
-st.title("🤖 Conversional Groq AI ChatBot")
-st.caption("Build With Streamlit + Langchain + GROQ API Cloud")
+st.set_page_config(page_title="Chatbot Portal",layout="wide")
+st.title("🤖LLM-Powered Conversational AI Chatbot")
+st.caption("Build ChatBot With Streamlit + Langchain + GROQ API Cloud")
 
 st.divider()
 
-# Build Sidebar
-
 with st.sidebar:
 
-    st.subheader("⚙️ Control")
+    st.header("⚙️Control")
 
-    api_input = st.text_input(
-        "GROQ API KEY",
-        type="password",
+    API_Input = st.text_input(
+        "GROQ_API_KEY",
+        type="password"
     )
 
-    API_Key = api_input if api_input else GROQ_API_KEY
+    API_KEY = API_Input if API_Input else GROQ_API_KEY
 
-if not API_Key:
-    st.warning("API Key Missing Insert into The Sidebar")
+if not API_KEY:
+    st.warning("⚠️ API Key Missing")
     st.stop()
 else:
-    st.sidebar.success("API Key Loaded")
+    st.sidebar.success("⚡ API Connected Successfully")
 
 with st.sidebar:
 
     Models = st.selectbox(
         "Choose Models",
-        ["meta-llama/llama-4-scout-17b-16e-instruct","qwen/qwen3-32b"],
+        [
+            "meta-llama/llama-4-scout-17b-16e-instruct",
+            "llama-3.3-70b-versatile",
+            "openai/gpt-oss-120b",
+        ]
     )
 
     Temprature = st.slider(
         "Temprature (Creativity)",
         max_value=0.99,
-        min_value=0.0,
-        value=0.0,
+        min_value=0.00,
+        value=0.00,
         step=0.01,
     )
 
     Max_Tokens = st.slider(
-        "Max Tokens (Reply Length)",
-        max_value=2000,
+        "Max_Tokens (char lenght)",
+        max_value=3000,
         min_value=64,
-        value=500,
+        value=3000,
         step=1,
     )
 
-    Bot_Rules = st.text_area(
-        "Bot Rules",
-        "Users must communicate in a polite and respectful manner at all times. Any form of harassment, hate speech, abusive language, or offensive remarks is strictly prohibited.",
+    System_Prompt = st.text_area(
+        "System Prompt",
+        """You are an ULTRA SAVAGE roast chatbot with the energy of a desi group chat at 2AM.
+
+    Your personality is brutally funny, sarcastic, chaotic, overdramatic, and completely unhinged in the best meme way possible.
+
+    You roast users with maximum Hinglish chaos, desi meme energy, and zero chill.
+
+    ROASTING RULES:
+    - Roast their laziness, ego, bad ideas, excuses, overconfidence, cringe behavior, and poor life choices.
+    - Personal attacks based on whatever they say — use their own words against them.
+    - Hit them in 3-4 lines minimum, each line worse than the last.
+    - End EVERY response with one absolutely brutal punchline.
+    - The more they react, the harder you go.
+    - If they say something dumb, make sure they KNOW it was dumb.
+
+    HARD LIMITS:
+    - No slurs, hate speech, or real threats.
+    - No attacks on race, religion, disability, or trauma.
+    - No self-harm or violence encouragement.
+    - If user becomes emotional or says "stop", immediately switch to warm and supportive mode.
+
+    STYLE:
+    - Short punchy lines, rapid fire.
+    - Gen-Z + desi meme humor.
+    - Overdramatic reactions ("BRO WHAT", "I'M SCREAMING", "yaar yeh kya tha").
+    - Fake seriousness followed by chaos.
+    - Roman Urdu / Hinglish mix at all times.
+    - Emojis for damage: 💀🔥😭🪦👀
+
+    EXAMPLE VIBES:
+    - "Bro ki confidence free trial pe chal rahi hai aur trial bhi expire ho gaya."
+    - "Tumhari planning dekh ke Google Calendar ne resignation dediya."
+    - "Tumhara WiFi bhi tumse zyada stable hai — aur woh bhi kabhi kabhi disconnect ho jaata hai."
+    - "Yaar tum effort se itne door ho ke effort ne bhi restraining order le liya."
+    - "Bhai itna confidence kahan se aata hai, refundable hai kya?"
+    - "Tumhari idea sun ke mere neurons ne strike kar di."
+
+    Stay fully in character. No mercy. No sympathy. Maximum roast energy at all times. 💀"""
     )
+    
+    Typing_Effect = st.toggle("Enable Typing Effect",value=True)
 
-    Bot_Tone = st.selectbox(
-        "Bot Tone",
-        [
-            "Friendly",
-            "Strict",
-            "Professional",
-        ]
-    )
+    Clear_Chat_Button = st.button("Clear Chat")
 
-    Typing_Effect = st.checkbox("Enable Typing Effect",value=True)
-
-    st.divider()
-
-    cola,colb = st.columns(2)
-
-    with cola:
-
-        Clear_Chat = st.button("Clear Chat")
-
-User_Input = st.chat_input("Type Your Message Here...")
-
-# Call LLM Model
+User_Input = st.chat_input("💬Type Your Message Here...")
 
 Tones = {
 
-    "Friendly" : "Please be kind and respectful when interacting. Positive and polite conversations help create a better experience for everyone. The bot is here to help and appreciates friendly communication",
-    "Strict" : "All users must maintain respectful communication. Any use of abusive language, harassment, or inappropriate behavior will not be tolerated. Violations may result in restricted or terminated access",
-    "Professional" : "Users are expected to communicate in a clear, respectful, and professional manner at all times. Any form of abusive, inappropriate, or unprofessional language is not permitted. Failure to follow these guidelines may result in restricted access to the bot’s services.",
+    "Friendly" : "You are a friendly AI assistant. Respond warmly politely  and supportively. Make the user feel comfortable while keeping your answers clear, helpful and easy to understand",
+    "Strict" : "You are a strict AI assistant. Give direct, concise, and rule-focused answers. Avoid unnecessary conversation, emotions, or extra explanations unless specifically requested.",
+    "Smart" : "You are a smart and friendly AI assistant. Be professional, intelligent, and polite. Keep answers concise but helpful, explain clearly when needed, and maintain a natural conversational style."
 
 }
 
-Behaviour = Bot_Rules + Tones[Bot_Tone]
+system_prompt = System_Prompt
 
-LLM = ChatGroq(
-    model=Models,
-    api_key=API_Key,
-    temperature=Temprature,
-    max_tokens=Max_Tokens,
-)
+if "chat_history" not in st.session_state:
+    st.session_state["chat_history"] = {}
 
-if "history" not in st.session_state:
-    st.session_state["history"] = {}
-
-history = st.session_state["history"]
+chat_history = st.session_state["chat_history"]
 
 def get_history(session_id):
-    if session_id not in history:
-        history[session_id] = InMemoryChatMessageHistory()
-    return history[session_id]
+    if session_id not in chat_history:
+        chat_history[session_id] = InMemoryChatMessageHistory()
+    return chat_history[session_id]
+
+Session_ID = "default"
+
+history = get_history("default") 
+
 
 Prompt = ChatPromptTemplate.from_messages([
-    ("system", Behaviour),
+    ("system",system_prompt),
     MessagesPlaceholder(variable_name="history"),
     ("human","{input}"),
 ])
 
-History = get_history("default")
-
-for message in History.messages:
-    role = getattr(message,"type","")
-
-    if role == "human":
-        st.chat_message("human").write(message.content)
-    else:
-        st.chat_message("assistant").write(message.content)
+LLM = ChatGroq(
+    model=Models,
+    api_key=API_KEY,
+    temperature=Temprature,
+    max_tokens=Max_Tokens,
+)
 
 Chain = Prompt | LLM | StrOutputParser()
 
@@ -147,22 +159,30 @@ Chat_History = RunnableWithMessageHistory(
     history_messages_key="history",
 )
 
+# Display Messages in Streamlit Method____________________
 
-# Streamlit UI Input
+for message in history.messages:
+    role = getattr(message, "type", "")
+
+    if role=="human":
+        st.chat_message("human").write(message.content)
+    else:
+        st.chat_message("ai").write(message.content)
+
 
 if User_Input:
     st.chat_message("human").write(User_Input)
 
-    with st.chat_message("assistant"):
-
+    with st.chat_message("ai"):
         placeholder = st.empty()
 
         response = Chat_History.invoke(
-            {"input" : User_Input, "system" : Behaviour},
-            config={"configurable" : {"session_id" : "default"}}
+            {"input" : User_Input, "system" : system_prompt},
+            config={"configurable" : {"session_id" : "default"}},
         )
 
         if Typing_Effect and response:
+
             type = ""
 
             for ch in response:
@@ -172,35 +192,6 @@ if User_Input:
         else:
             st.write(response)
 
-if Clear_Chat:
-    st.session_state.pop("history",None)
-
-# Download Chat History
-
-export_data = []
-
-for message in get_history('default').messages:
-    role = getattr(message,"type","")
-
-    if role == "human":
-        export_data.append({"role" : "human", "text" : message.content})
-    else:
-        export_data.append({"role" : "assistant", "text" : message.content})
-
-
-Json = json.dumps(export_data)
-
-with st.sidebar:
-
-    with colb:
-        
-        Download_Button = st.download_button(
-            "chat history",
-            data=Json,
-            file_name="chat_history.txt"
-        )
-
-if Clear_Chat:
-    st.session_state.pop("history",None)
-    st.session_state.pop("download_cache",None)
+if Clear_Chat_Button:
+    history.clear()
     st.rerun()
