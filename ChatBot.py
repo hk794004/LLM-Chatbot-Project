@@ -13,7 +13,7 @@ from langchain_core.runnables import RunnableWithMessageHistory
 
 load_dotenv()
 
-GROQ_API_KEY = os.getenv("GROQ_API_KEY").strip()
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
 st.set_page_config(page_title="Chatbot Portal",layout="wide")
 st.title("🤖LLM-Powered Conversational AI Chatbot")
